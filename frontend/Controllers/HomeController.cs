@@ -1,21 +1,33 @@
 ﻿using frontend.Models;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using RestSharp;
 using System.Diagnostics;
 
 namespace frontend.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly IConfiguration configuration;
         private readonly ILogger<HomeController> _logger;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(IConfiguration configuration, ILogger<HomeController> logger)
         {
+            this.configuration = configuration;
             _logger = logger;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var client = new RestClient(configuration["backendbaseurl"] + "/Product");
+            var request = new RestRequest();
+            var response = await client.GetAsync(request);
+            List<Product> products = new List<Product>();
+            
+            if (response.IsSuccessStatusCode)            
+                products = JsonConvert.DeserializeObject<List<Product>>(response.Content);
+            
+            return View(products);
         }
 
         public IActionResult Privacy()
